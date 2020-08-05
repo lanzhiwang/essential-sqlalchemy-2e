@@ -40,7 +40,14 @@ class Child(Base):
 Base.metadata.create_all(engine)
 
 p = Parent()
-c = Child()
-
+c1 = Child()
+c2 = Child()
 print(dir(p))  # ['children', 'id', 'metadata']
-print(dir(c))  # ['id', 'metadata', 'parent_id']
+print(dir(c1))  # ['id', 'metadata', 'parent_id']
+
+p.children.append(c1)
+p.children.append(c2)
+session.add(p)
+session.add(c1)
+session.add(c2)
+session.commit()

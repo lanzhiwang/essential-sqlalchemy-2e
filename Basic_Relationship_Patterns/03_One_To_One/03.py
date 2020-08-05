@@ -29,26 +29,28 @@ CREATE TABLE child (
 class Parent(Base):
     __tablename__ = 'parent'
     id = Column(Integer, primary_key=True)
-    children = relationship("Child", back_populates="parent")
+    child = relationship("Child", back_populates="parent", uselist=False)
 
 class Child(Base):
     __tablename__ = 'child'
     id = Column(Integer, primary_key=True)
     parent_id = Column(Integer, ForeignKey('parent.id'))
-    parent = relationship("Parent", back_populates="children")
+    parent = relationship("Parent", back_populates="child")
 
 
 Base.metadata.create_all(engine)
 
-p = Parent()
+p1 = Parent()
+p2 = Parent()
 c1 = Child()
 c2 = Child()
-print(dir(p))  # ['children', 'id', 'metadata']
+print(dir(p1))  # ['child', 'id', 'metadata']
 print(dir(c1))  # ['id', 'metadata', 'parent', 'parent_id']
 
-p.children.append(c1)
-c2.parent = p
-session.add(p)
+p1.child = c1
+c2.parent = p2
+session.add(p1)
+session.add(p2)
 session.add(c1)
 session.add(c2)
 session.commit()
