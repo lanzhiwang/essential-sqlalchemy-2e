@@ -80,9 +80,7 @@ class LineItem(Base):
     extended_cost = Column(Numeric(12, 2))
 
     order = relationship("Order", backref=backref('line_items', order_by=line_item_id))
-    cookie = relationship(
-        "Cookie",
-        backref=('line_item', uselist=False))
+    cookie = relationship("Cookie")
 
     def __repr__(self):
         return "LineItems(order_id={self.order_id}, " \
@@ -405,8 +403,7 @@ INSERT INTO "main"."users" ("user_id", "username", "email_address", "phone", "pa
 """
 
 o1 = Order()
-# o1.user = cookiemon
-cookiemon.orders.append(o1)
+o1.user = cookiemon
 session.add(o1)
 session.commit()
 """
@@ -416,22 +413,56 @@ INSERT INTO "main"."orders" ("order_id", "user_id", "shipped") VALUES ('1', '1',
 cc = session.query(Cookie).filter(Cookie.cookie_name == "chocolate chip").one()
 # print(cc)  # Cookie(cookie_name='chocolate chip', cookie_recipe_url='http://1', cookie_sku='CC01', quantity=112, unit_cost=0.50)
 line1 = LineItem(quantity=2, extended_cost=1.00)
-# line1.cookie = cc
+line1.cookie = cc
 # line1.order = o1
-cc.line_item = line1
 
 pb = session.query(Cookie).filter(Cookie.cookie_name == "peanut butter").one()
 # print(pb)  # Cookie(cookie_name='peanut butter', cookie_recipe_url='http://4', cookie_sku='PB01', quantity=24, unit_cost=0.25)
 line2 = LineItem(quantity=12, extended_cost=3.00)
-# line2.cookie = pb
+line2.cookie = pb
 # line2.order = o1
-pb.line_item = line2
 
 o1.line_items.append(line1)
 o1.line_items.append(line2)
 session.commit()
 
+o2 = Order()
+o2.user = cakeeater
 
+cc = session.query(Cookie).filter(Cookie.cookie_name == "chocolate chip").one()
+line1 = LineItem(cookie=cc, quantity=24, extended_cost=12.00)
 
+oat = session.query(Cookie).filter(Cookie.cookie_name == "oatmeal raisin").one()
+line2 = LineItem(cookie=oat, quantity=6, extended_cost=6.00)
 
+o2.line_items.append(line1)
+o2.line_items.append(line2)
 
+session.add(o2)
+session.commit()
+
+query = session.query(Order.order_id, User.username, User.phone,
+                      Cookie.cookie_name, LineItem.quantity,
+                      LineItem.extended_cost)
+query = query.join(User).join(LineItem).join(Cookie)
+query = query.filter(User.username == 'cookiemon')
+print(query)
+results = query.all()
+print(results)
+"""
+SELECT
+    orders.order_id AS orders_order_id,
+    users.username AS users_username,
+    users.phone AS users_phone,
+    cookies.cookie_name AS cookies_cookie_name,
+    line_items.quantity AS line_items_quantity,
+    line_items.extended_cost AS line_items_extended_cost
+FROM orders
+JOIN users ON users.user_id = orders.user_id
+JOIN line_items ON orders.order_id = line_items.order_id
+JOIN cookies ON cookies.cookie_id = line_items.cookie_id
+WHERE users.username = ?
+[
+    (1, 'cookiemon', '111-111-1111', 'chocolate chip', 2, Decimal('1.00')),
+    (1, 'cookiemon', '111-111-1111', 'peanut butter', 12, Decimal('3.00'))]
+"""
