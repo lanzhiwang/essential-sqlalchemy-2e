@@ -40,11 +40,12 @@ association_table = Table(
 class Parent(Base):
     __tablename__ = 'left'
     id = Column(Integer, primary_key=True)
-    children = relationship("Child", secondary=association_table)
+    children = relationship("Child", secondary=association_table, backref="parents")
 
 class Child(Base):
     __tablename__ = 'right'
     id = Column(Integer, primary_key=True)
+
 
 Base.metadata.create_all(engine)
 
@@ -53,13 +54,15 @@ p2 = Parent()
 c1 = Child()
 c2 = Child()
 print(dir(p1))  # ['children', 'id', 'metadata']
-print(dir(c1))  # ['id', 'metadata']
+print(dir(c1))  # ['id', 'metadata', 'parents']
 
 p1.children.append(c1)
 p1.children.append(c2)
 
-p2.children.append(c1)
-p2.children.append(c2)
+# p2.children.append(c1)
+c1.parents.append(p2)
+# p2.children.append(c2)
+c2.parents.append(p2)
 
 session.add(p1)
 session.add(p2)
